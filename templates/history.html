@@ -1,40 +1,42 @@
-{% extends "base.html" %}
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <div class="history-page">
-    <div class="section-header">
-        <h1>Your History</h1>
-        <p>Review your past resume analyses.</p>
-    </div>
+  <div class="section-header">
+    <h1>Your History</h1>
+    <p>Review your past resume analyses.</p>
+  </div>
 
-    {% if reports %}
-        <div class="history-grid">
-            {% for report in reports %}
-            <div class="history-card">
-                <div class="history-preview">
-                    <strong>Resume Snippet:</strong>
-                    <p>{{ report.resume }}</p>
-                </div>
-                <div class="history-details">
-                    {% if report.result and not report.result.error %}
-                        <div class="result-section">
-                            <h4>Skills</h4>
-                            <p>{{ report.result.skills | join(', ') }}</p>
-                        </div>
-                        <div class="result-section">
-                            <h4>Missing Skills</h4>
-                            <p>{{ report.result.missing_skills | join(', ') }}</p>
-                        </div>
-                    {% else %}
-                        <p class="error-text">Error in analysis or old format.</p>
-                    {% endif %}
-                </div>
-            </div>
-            {% endfor %}
+  {% if reports %}
+  <div class="history-grid">
+    {% for report in reports %}
+    <div class="history-card">
+      <div class="history-preview">
+        <strong>Resume Snippet:</strong>
+        <p>{{ report.resume }}</p>
+      </div>
+      <div class="history-details">
+        {% if report.result and not report.result.error %}
+        <div class="result-section">
+          <h4>Skills</h4>
+          <p>{{ report.result.skills | join(', ') }}</p>
         </div>
-    {% else %}
-        <div class="empty-state">
-            <p>No history found. Go to the <a href="{{ url_for('dashboard') }}">dashboard</a> to analyze a resume.</p>
+        <div class="result-section">
+          <h4>Missing Skills</h4>
+          <p>{{ report.result.missing_skills | join(', ') }}</p>
         </div>
-    {% endif %}
+        {% else %}
+        <p class="error-text">Error in analysis or old format.</p>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <p>
+      No history found. Go to the
+      <a href="{{ url_for('dashboard') }}">dashboard</a> to analyze a resume.
+    </p>
+  </div>
+  {% endif %}
 </div>
 {% endblock %}

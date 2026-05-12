@@ -1,78 +1,94 @@
-{% extends "base.html" %}
-{% block content %}
+{% extends "base.html" %} {% block content %}
 <div class="dashboard-page">
-    <div class="dashboard-header-text">
-        <h1>Welcome, {% if session.get('full_name') %}{{ session.get('full_name') }}{% else %}{{ session.get('user') }}{% endif %}</h1>
+  <div class="dashboard-header-text">
+    <h1>
+      Welcome, {% if session.get('full_name') %}{{ session.get('full_name') }}{%
+      else %}{{ session.get('user') }}{% endif %}
+    </h1>
+  </div>
+
+  <div class="dashboard-card form-container">
+    <h2>Resume Analyzer</h2>
+
+    <form method="POST" enctype="multipart/form-data" class="analyze-form">
+      <div class="form-group">
+        <textarea
+          name="resume"
+          rows="6"
+          placeholder="Paste your resume (optional)"
+        ></textarea>
+      </div>
+
+      <p class="or-divider">OR upload file:</p>
+
+      <div class="form-group">
+        <input type="file" name="file" accept=".pdf,.docx" class="file-input" />
+      </div>
+
+      <div class="form-group">
+        <input
+          type="text"
+          name="role"
+          placeholder="What do you want to become? (e.g. Backend Engineer)"
+          required
+          class="text-input"
+        />
+      </div>
+
+      <button type="submit" class="primary-button" id="analyze-btn">
+        Analyze
+      </button>
+    </form>
+  </div>
+
+  {% if result %}
+  <div class="result-container">
+    {% if result.error %}
+    <div class="alert alert-error">
+      <p>{{ result.error }}</p>
     </div>
+    {% else %}
+    <div class="result-card">
+      <h3>Skills</h3>
+      <ul>
+        {% for skill in result.skills %}
+        <li>{{ skill }}</li>
+        {% endfor %}
+      </ul>
 
-    <div class="dashboard-card form-container">
-        <h2>Resume Analyzer</h2>
-        
-        <form method="POST" enctype="multipart/form-data" class="analyze-form">
-            <div class="form-group">
-                <textarea name="resume" rows="6" placeholder="Paste your resume (optional)"></textarea>
-            </div>
-            
-            <p class="or-divider">OR upload file:</p>
-            
-            <div class="form-group">
-                <input type="file" name="file" accept=".pdf,.docx" class="file-input">
-            </div>
-            
-            <div class="form-group">
-                <input type="text" name="role" placeholder="What do you want to become? (e.g. Backend Engineer)" required class="text-input">
-            </div>
-            
-            <button type="submit" class="primary-button" id="analyze-btn">Analyze</button>
-        </form>
-    </div>
+      <h3>Missing Skills</h3>
+      <ul>
+        {% for skill in result.missing_skills %}
+        <li>{{ skill }}</li>
+        {% endfor %}
+      </ul>
 
-    {% if result %}
-    <div class="result-container">
-        {% if result.error %}
-            <div class="alert alert-error">
-                <p>{{ result.error }}</p>
-            </div>
-        {% else %}
-            <div class="result-card">
-                <h3>Skills</h3>
-                <ul>
-                    {% for skill in result.skills %}
-                    <li>{{ skill }}</li>
-                    {% endfor %}
-                </ul>
+      <h3>Roadmap</h3>
+      <ul>
+        {% for step in result.roadmap %}
+        <li>{{ step }}</li>
+        {% endfor %}
+      </ul>
 
-                <h3>Missing Skills</h3>
-                <ul>
-                    {% for skill in result.missing_skills %}
-                    <li>{{ skill }}</li>
-                    {% endfor %}
-                </ul>
-
-                <h3>Roadmap</h3>
-                <ul>
-                    {% for step in result.roadmap %}
-                    <li>{{ step }}</li>
-                    {% endfor %}
-                </ul>
-
-                <h3>Interview Questions</h3>
-                <ul>
-                    {% for q in result.interview_questions %}
-                    <li>{{ q }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
+      <h3>Interview Questions</h3>
+      <ul>
+        {% for q in result.interview_questions %}
+        <li>{{ q }}</li>
+        {% endfor %}
+      </ul>
     </div>
     {% endif %}
+  </div>
+  {% endif %}
 </div>
 
 <script>
-    document.querySelector('.analyze-form').addEventListener('submit', function() {
-        const btn = document.getElementById('analyze-btn');
-        btn.textContent = 'Analyzing...';
-        btn.disabled = true;
+  document
+    .querySelector(".analyze-form")
+    .addEventListener("submit", function () {
+      const btn = document.getElementById("analyze-btn");
+      btn.textContent = "Analyzing...";
+      btn.disabled = true;
     });
 </script>
 {% endblock %}

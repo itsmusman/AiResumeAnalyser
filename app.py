@@ -1,27 +1,32 @@
-from flask import Flask, render_template, redirect, request, url_for, session, g
-import PyPDF2
-import docx
-from db import SessionLocal, Base, engine
 import json
+
+import docx
+import PyPDF2
+from flask import Flask, g, redirect, render_template, request, session, url_for
+from werkzeug.security import check_password_hash, generate_password_hash
+
 import models
 from ai import analyze_resume
-from werkzeug.security import generate_password_hash, check_password_hash
+from db import Base, SessionLocal, engine
 
 app = Flask(__name__)
 app.secret_key = "secret123"
 
 Base.metadata.create_all(bind=engine)
 
+
 def get_db():
-    if 'db' not in g:
+    if "db" not in g:
         g.db = SessionLocal()
     return g.db
 
+
 @app.teardown_appcontext
 def teardown_db(exception):
-    db = g.pop('db', None)
+    db = g.pop("db", None)
     if db is not None:
         db.close()
+
 
 # Homepage
 @app.route("/")
@@ -46,7 +51,9 @@ def login():
             session["full_name"] = user.full_name
             return redirect(url_for("dashboard"))
         else:
-            return render_template("login.html", error="Invalid credentials. Please try again.")
+            return render_template(
+                "login.html", error="Invalid credentials. Please try again."
+            )
     return render_template("login.html")
 
 
@@ -62,8 +69,10 @@ def signup():
 
         existing_user = db.query(models.User).filter_by(email=email).first()
         if existing_user:
-            return render_template("signup.html", error="User already exists. Please log in.")
-        
+            return render_template(
+                "signup.html", error="User already exists. Please log in."
+            )
+
         hashed_password = generate_password_hash(password)
         user = models.User(email=email, password=hashed_password, full_name=full_name)
         db.add(user)
@@ -78,7 +87,7 @@ def signup():
 def dashboard():
     if "user" not in session:
         return redirect(url_for("login"))
-    
+
     result = None
     db = get_db()
     user = db.query(models.User).filter_by(id=session.get("user_id")).first()
@@ -108,7 +117,7 @@ def dashboard():
                     resume_text = text
                 except Exception as e:
                     result = {"error": f"Failed to read DOCX file: {str(e)}"}
-        
+
         if resume_text and user_goal:
             try:
                 result = analyze_resume(resume_text, user_goal)
@@ -116,13 +125,15 @@ def dashboard():
                 # save report to db
                 if "error" not in result:
                     report = models.Report(
-                        user_id=user.id, resume_text=resume_text, result=json.dumps(result)
+                        user_id=user.id,
+                        resume_text=resume_text,
+                        result=json.dumps(result),
                     )
                     db.add(report)
                     db.commit()
             except Exception as e:
                 result = {"error": f"AI Error: {str(e)}"}
-                
+
     return render_template("dashboard.html", user=user, result=result)
 
 
@@ -131,10 +142,10 @@ def dashboard():
 def history():
     if "user" not in session:
         return redirect(url_for("login"))
-    
+
     db = get_db()
     user = db.query(models.User).filter_by(id=session.get("user_id")).first()
-    
+
     reports = (
         db.query(models.Report)
         .filter_by(user_id=user.id)
@@ -146,14 +157,16 @@ def history():
     for r in reports:
         try:
             parsed_result = json.loads(r.result)
-            parsed_reports.append({
-                "id": r.id,
-                "resume": r.resume_text[:200] + "..." if r.resume_text else "",
-                "result": parsed_result,
-            })
+            parsed_reports.append(
+                {
+                    "id": r.id,
+                    "resume": r.resume_text[:200] + "..." if r.resume_text else "",
+                    "result": parsed_result,
+                }
+            )
         except:
             pass
-            
+
     return render_template("history.html", reports=parsed_reports, user=user)
 
 
