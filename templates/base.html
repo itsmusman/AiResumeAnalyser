@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Resume Analyzer</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="topbar">
+        <div class="brand">
+          <a href="{{ url_for('dashboard') }}">AI Resume Analyzer</a>
+        </div>
+        <nav class="nav-links">
+          <a href="{{ url_for('dashboard') }}">Dashboard</a>
+          <a href="{{ url_for('history') }}">History</a>
+          <a href="{{ url_for('logout') }}">Logout</a>
+        </nav>
+      </header>
+
+      <main class="page-content">{% block content %}{% endblock %}</main>
+
+      <footer class="footer">
+        <p>© 2026 AI Resume Analyzer</p>
+      </footer>
+    </div>
+  </body>
+</html>

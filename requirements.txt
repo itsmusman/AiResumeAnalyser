@@ -1,0 +1,7 @@
+Flask==2.3.3
+SQLAlchemy==2.0.40
+pymysql==1.1.0
+openai==1.54.0
+python-dotenv==1.0.0
+PyPDF2==3.0.1
+python-docx==1.2.0

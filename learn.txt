@@ -1,0 +1,82 @@
+venv isolates your project's dependencies. Here's why it matters:
+
+Without venv:
+
+All packages go into your global Python installation
+Project A needs Flask 2, Project B needs Flask 3 → Conflict!
+Hard to share projects (dependencies scattered everywhere)
+One project's update can break another
+With venv:
+
+Each project has its own isolated Python environment
+Project A can use Flask 2, Project B can use Flask 3 → No conflict!
+Easy to share (just share requirements.txt)
+Clean, organized, reproducible setup
+Example:
+
+AiResumeAnalyser/
+├── venv/  ← Flask 3.1 + OpenAI + other packages (isolated)
+└── app.py
+
+OldProject/
+├── venv/  ← Flask 2.0 + different packages (isolated)
+└── app.py
+
+Each project's venv is completely separate, so you can run different package versions without issues.
+
+Bottom line: It's a best practice that prevents dependency headaches. Always use venv for Python projects.
+
+
+pip install flask sqlalchemy pymysql openai PyPDF2 python-docx
+
+
+step-1: setup
+step-2: database connection
+
+
+
+# Get your library card
+create_engine = "I have access to the database"
+
+# Plan the shelves
+declarative_base = "I'll have User shelf, Resume shelf, etc."
+
+# Get a librarian
+sessionmaker = "I can now ask for books (data) from the database"
+
+These three things let you: connect → organize → use your database.
+
+ORM = Object-Relational Mapping
+
+It's a fancy way to say: "Let me use Python objects instead of writing database commands"
+
+Without ORM (hard way):
+
+# You write SQL (database language)
+query = "SELECT * FROM users WHERE age > 18"
+result = database.execute(query)
+
+With ORM (easy way):
+# You use Python objects
+users = session.query(User).filter(User.age > 18).all()
+
+
+Real-world example:
+
+Think of a phonebook app:
+
+Without ORM:
+
+You manually write: "Go find row 5 in table A, get column 2"
+Complicated, error-prone
+With ORM:
+
+You just say: contact.name or contact.phone
+The app automatically handles the database stuff
+Benefits:
+✓ Write Python code, not SQL
+✓ Easier to read and understand
+✓ Safer (prevents SQL injection attacks)
+✓ Works with different databases (MySQL, PostgreSQL, SQLite, etc.)
+
+SQLAlchemy ORM = A tool that lets you use Python classes to work with your database instead of writing raw SQL. 🎯

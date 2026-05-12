@@ -1,0 +1,68 @@
+{% extends "base.html" %} {% block content %}
+<section class="dashboard-page">
+  <div class="dashboard-header">
+    <div>
+      <p class="eyebrow">Resume Analytics</p>
+      <h1>Welcome to your dashboard, {{ user.name }}</h1>
+      <p class="subtitle">
+        Track resume performance, review your history, and get AI-powered
+        suggestions instantly.
+      </p>
+    </div>
+  </div>
+
+  <form method="post" enctype="multipart/form-data">
+    <textarea
+      name="resume"
+      placeholder="Paste your resume here...(Optional)"
+    ></textarea>
+    <p>Or upload file</p>
+    <input type="file" name="file" />
+    <input
+      name="role"
+      placeholder="what do you want to become (e.g data analyst, backend developer)?"
+      required
+    />
+    <button type="submit" class="primary-button">Analyze Resume</button>
+  </form>
+</section>
+
+{% if result %}
+<section class="red">
+  {% if result.error %}
+  <p>{{ result.error }}</p>
+  {% endif %}
+
+  <h3>Skills</h3>
+
+  <ul>
+    {% for s in result.get("skills", []) %}
+    <li>{{ s }}</li>
+    {% endfor %}
+  </ul>
+
+  <h3>Missing Skills</h3>
+
+  <ul>
+    {% for s in result.get("missing_skills", []) %}
+    <li>{{ s }}</li>
+    {% endfor %}
+  </ul>
+
+  <h3>Roadmap</h3>
+
+  <ul>
+    {% for s in result.get("roadmap", []) %}
+    <li>{{ s }}</li>
+    {% endfor %}
+  </ul>
+
+  <h3>Interview Questions List</h3>
+
+  <ul>
+    {% for s in result.get("interview_questions", []) %}
+    <li>{{ s }}</li>
+    {% endfor %}
+  </ul>
+</section>
+{% endif %} {% endblock %}
