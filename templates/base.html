@@ -3,29 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Resume Analyzer</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='style.css') }}"
-    />
+    <title>AI Career Copilot</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
   </head>
   <body>
     <div class="page-shell">
       <header class="topbar">
         <div class="brand">
-          <a href="{{ url_for('dashboard') }}">AI Resume Analyzer</a>
+          <a href="{{ url_for('dashboard') }}">AI Career Copilot</a>
         </div>
         <nav class="nav-links">
-          <a href="{{ url_for('dashboard') }}">Dashboard</a>
-          <a href="{{ url_for('history') }}">History</a>
-          <a href="{{ url_for('logout') }}">Logout</a>
+          {% if session.get('user') %}
+            <a href="{{ url_for('history') }}">History</a>
+            <a href="{{ url_for('dashboard') }}">Dashboard</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+          {% else %}
+            <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('signup') }}">Sign Up</a>
+          {% endif %}
         </nav>
       </header>
 
       <main class="page-content">{% block content %}{% endblock %}</main>
 
       <footer class="footer">
-        <p>© 2026 AI Resume Analyzer</p>
+        <p>© 2026 AI Career Copilot</p>
       </footer>
     </div>
   </body>

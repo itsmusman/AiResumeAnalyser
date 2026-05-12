@@ -1,16 +1,27 @@
-from flask import Flask, render_template, redirect, request, url_for, session
+from flask import Flask, render_template, redirect, request, url_for, session, g
 import PyPDF2
 import docx
 from db import SessionLocal, Base, engine
 import json
 import models
 from ai import analyze_resume
+from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
 app.secret_key = "secret123"
 
 Base.metadata.create_all(bind=engine)
 
+def get_db():
+    if 'db' not in g:
+        g.db = SessionLocal()
+    return g.db
+
+@app.teardown_appcontext
+def teardown_db(exception):
+    db = g.pop('db', None)
+    if db is not None:
+        db.close()
 
 # Homepage
 @app.route("/")
@@ -23,33 +34,38 @@ def home():
 # Login
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    db = SessionLocal()
+    db = get_db()
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
 
-        user = db.query(models.User).filter_by(email=email, password=password).first()
-        if user:
+        user = db.query(models.User).filter_by(email=email).first()
+        if user and check_password_hash(user.password, password):
             session["user"] = user.email
+            session["user_id"] = user.id
+            session["full_name"] = user.full_name
             return redirect(url_for("dashboard"))
         else:
-            return "Invalid credentials. Please try again."
+            return render_template("login.html", error="Invalid credentials. Please try again.")
     return render_template("login.html")
 
 
 # SignUp
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
-    db = SessionLocal()
+    db = get_db()
 
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
+        full_name = request.form.get("full_name")
 
         existing_user = db.query(models.User).filter_by(email=email).first()
         if existing_user:
-            return "User already exists. Please log in."
-        user = models.User(email=email, password=password)
+            return render_template("signup.html", error="User already exists. Please log in.")
+        
+        hashed_password = generate_password_hash(password)
+        user = models.User(email=email, password=hashed_password, full_name=full_name)
         db.add(user)
         db.commit()
 
@@ -62,12 +78,14 @@ def signup():
 def dashboard():
     if "user" not in session:
         return redirect(url_for("login"))
+    
     result = None
+    db = get_db()
+    user = db.query(models.User).filter_by(id=session.get("user_id")).first()
 
     if request.method == "POST":
         user_goal = request.form.get("role")
         resume_text = request.form.get("resume")
-
         file = request.files.get("file")
 
         # file handling
@@ -79,9 +97,8 @@ def dashboard():
                     for page in pdf_reader.pages:
                         text += page.extract_text() or ""
                     resume_text = text
-
                 except Exception as e:
-                    result = {"error": f"Failed to read PDF file. as {str(e)}"}
+                    result = {"error": f"Failed to read PDF file: {str(e)}"}
             elif file.filename.endswith(".docx"):
                 try:
                     doc = docx.Document(file)
@@ -90,23 +107,23 @@ def dashboard():
                         text += para.text + "\n"
                     resume_text = text
                 except Exception as e:
-                    result = {"error": f"Failed to read DOCX file. as {str(e)}"}
+                    result = {"error": f"Failed to read DOCX file: {str(e)}"}
+        
         if resume_text and user_goal:
             try:
                 result = analyze_resume(resume_text, user_goal)
 
                 # save report to db
-                db = SessionLocal()
-                user = db.query(models.User).filter_by(email=session["user"]).first()
-                report = models.Report(
-                    user_id=user.id, resume_text=resume_text, result=json.dumps(result)
-                )
-
-                db.add(report)
-                db.commit()
+                if "error" not in result:
+                    report = models.Report(
+                        user_id=user.id, resume_text=resume_text, result=json.dumps(result)
+                    )
+                    db.add(report)
+                    db.commit()
             except Exception as e:
                 result = {"error": f"AI Error: {str(e)}"}
-    return render_template("dashboard.html", user=session["user"], result=result)
+                
+    return render_template("dashboard.html", user=user, result=result)
 
 
 # History
@@ -114,8 +131,10 @@ def dashboard():
 def history():
     if "user" not in session:
         return redirect(url_for("login"))
-    db = SessionLocal()
-    user = db.query(models.User).filter_by(email=session["user"]).first()
+    
+    db = get_db()
+    user = db.query(models.User).filter_by(id=session.get("user_id")).first()
+    
     reports = (
         db.query(models.Report)
         .filter_by(user_id=user.id)
@@ -123,26 +142,25 @@ def history():
         .all()
     )
 
-    # Convert result from JSON string to dict
     parsed_reports = []
     for r in reports:
         try:
             parsed_result = json.loads(r.result)
-        except:
-            parsed_reports = []
-        parsed_reports.append(
-            {
-                "resume": r.resume_text,
+            parsed_reports.append({
+                "id": r.id,
+                "resume": r.resume_text[:200] + "..." if r.resume_text else "",
                 "result": parsed_result,
-            }
-        )
-    return render_template("history.html", reports=parsed_reports)
+            })
+        except:
+            pass
+            
+    return render_template("history.html", reports=parsed_reports, user=user)
 
 
 # Logout
 @app.route("/logout")
 def logout():
-    session.pop("user", None)
+    session.clear()
     return redirect(url_for("login"))
 
 

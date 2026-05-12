@@ -48,9 +48,19 @@ Resume:
             ],
         )
         content = response.choices[0].message.content.strip()
+        
+        # Find the first '{' and the last '}'
         start = content.find("{")
         end = content.rfind("}") + 1
-        return json.loads(content[start:end])
+        
+        if start != -1 and end != 0:
+            json_str = content[start:end]
+            return json.loads(json_str)
+        else:
+            return {
+                "error": "Failed to parse AI response as JSON.",
+                "raw_content": content
+            }
     except Exception as e:
         return {
             "skills": [],
